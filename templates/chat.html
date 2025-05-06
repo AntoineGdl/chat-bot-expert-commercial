@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        /* Style de l'icône du robot */
+        #chatbot-icon {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #007bff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #chatbot-icon img {
+            width: 40px;
+            height: 40px;
+        }
+
+        /* Style de la fenêtre de chat */
+        #chatbot-window {
+            position: fixed;
+            bottom: 90px;
+            left: 20px;
+            width: 350px;
+            height: 500px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transform: translateX(-120%);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #chatbot-window.open {
+            transform: translateX(0);
+        }
+
+        #chatbot-header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        #chatbot-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* Style des bulles de message */
+        .message {
+            max-width: 70%;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.user {
+            background-color: #007bff;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+
+        .message.bot {
+            background-color: #e5e5ea;
+            color: #000;
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+
+        #chatbot-footer {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            background-color: #fff;
+        }
+
+        #chatbot-footer input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #chatbot-footer button {
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #chatbot-footer button img {
+            width: 20px;
+            height: 20px;
+            filter: invert(1);
+        }
+    </style>
+</head>
+<body>
+    <div id="chatbot-icon">
+        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712027.png" alt="Chatbot">
+    </div>
+
+    <div id="chatbot-window">
+        <div id="chatbot-header">IA · Expert commercial</div>
+        <div id="chatbot-body" id="chat-content">
+            <div class="message bot"><img src="/static/bot.png" alt="Bot" style="width: 20px; height: 20px; margin-right: 10px; vertical-align: middle;"> Bonjour ! Comment puis-je vous aider ?</div>
+        </div>
+        <div id="chatbot-footer">
+            <input type="text" id="message" placeholder="Votre message..." required>
+            <button id="send-button">
+                <img src="https://cdn-icons-png.flaticon.com/512/786/786205.png" alt="Envoyer">
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const chatbotIcon = document.getElementById('chatbot-icon');
+        const chatbotWindow = document.getElementById('chatbot-window');
+        const sendButton = document.getElementById('send-button');
+        const messageInput = document.getElementById('message');
+        const chatBody = document.getElementById('chatbot-body');
+
+        chatbotIcon.addEventListener('click', () => {
+            chatbotWindow.classList.toggle('open');
+        });
+
+        sendButton.addEventListener('click', async () => {
+        const userMessage = messageInput.value.trim();
+        if (!userMessage) return;
+
+        // Efface le champ de saisie
+        messageInput.value = '';
+
+        // Affiche le message de l'utilisateur
+        const userMessageElement = document.createElement('div');
+        userMessageElement.classList.add('message', 'user');
+        userMessageElement.innerHTML = userMessage;
+        chatBody.appendChild(userMessageElement);
+
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: userMessage }),
+            });
+
+            const data = await response.json();
+            const botResponse = data.bot_response || 'Aucune réponse';
+
+            // Affiche la réponse du bot
+            const botMessageElement = document.createElement('div');
+            botMessageElement.classList.add('message', 'bot');
+            botMessageElement.innerHTML = `<img src="/static/bot.png" alt="Bot" style="width: 20px; height: 20px; margin-right: 10px; vertical-align: middle;"> ${botResponse}`;
+            chatBody.appendChild(botMessageElement);
+        } catch (error) {
+            const errorMessageElement = document.createElement('div');
+            errorMessageElement.classList.add('message', 'bot');
+            errorMessageElement.innerHTML = `<strong>Erreur :</strong> Impossible de contacter le serveur.`;
+            chatBody.appendChild(errorMessageElement);
+        }
+
+        chatBody.scrollTop = chatBody.scrollHeight;
+    });
+    </script>
+</body>
+</html>
