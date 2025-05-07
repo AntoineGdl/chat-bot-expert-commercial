@@ -7,10 +7,10 @@ import requests
 app = Flask(__name__)
 app.secret_key = "votre_cle_secrete"
 
-SEUIL_SIMILARITE = 0.7  # Augmentation du seuil pour être plus sélectif
+SEUIL_SIMILARITE = 0.5  # Augmentation du seuil pour être plus sélectif
 
 # Charger le fichier CSV
-df = pd.read_csv("static/questions_commerciales.csv", delimiter=';')
+df = pd.read_csv("static/questions_commerciales_variations.csv", delimiter=';')
 questions = df["Questions"].tolist()
 reponses = df["réponses"].tolist()
 
